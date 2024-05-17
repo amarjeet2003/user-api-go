@@ -73,15 +73,34 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user models.User
-	err = json.NewDecoder(r.Body).Decode(&user)
+	var reqBody map[string]interface{}
+	err = json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
 		log.Println("Error decoding request body:", err)
 		http.Error(w, "Bad request", http.StatusBadRequest)
 		return
 	}
 
-	user.ID = id
+	dobStr, ok := reqBody["dob"].(string)
+	if !ok {
+		log.Println("DOB is not a valid string")
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	dob, err := time.Parse("2006-01-02", dobStr)
+	if err != nil {
+		log.Println("Error parsing DOB:", err)
+		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		return
+	}
+
+	user := models.User{
+		ID:        id,
+		FirstName: reqBody["first_name"].(string),
+		LastName:  reqBody["last_name"].(string),
+		Username:  reqBody["username"].(string),
+		DOB:       dob,
+	}
 
 	err = uc.userRepo.UpdateUser(&user)
 	if err != nil {
@@ -99,12 +118,7 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (uc *UserController) SearchUsers(w http.ResponseWriter, r *http.Request) {
 	name := r.URL.Query().Get("name")
-	if name == "" {
-		http.Error(w, "Name parameter is required", http.StatusBadRequest)
-		return
-	}
-
-	users, err := uc.userRepo.SearchUsersByName(name)
+	users, err := uc.userRepo.SearchUsers(name)
 	if err != nil {
 		log.Println("Error searching users:", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)

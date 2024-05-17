@@ -43,9 +43,19 @@ func (ur *UserRepository) CreateUser(user *models.User) error {
 	return nil
 }
 
-func (ur *UserRepository) SearchUsersByName(name string) ([]*models.User, error) {
-	query := "SELECT id, first_name, last_name, username, dob FROM users WHERE first_name LIKE ? OR last_name LIKE ?"
-	rows, err := ur.db.Query(query, "%"+name+"%", "%"+name+"%")
+func (ur *UserRepository) SearchUsers(name string) ([]*models.User, error) {
+	var query string
+	var rows *sql.Rows
+	var err error
+
+	if name != "" {
+		query = "SELECT id, first_name, last_name, username, dob FROM users WHERE first_name LIKE ? OR last_name LIKE ?"
+		rows, err = ur.db.Query(query, "%"+name+"%", "%"+name+"%")
+	} else {
+		query = "SELECT id, first_name, last_name, username, dob FROM users ORDER BY dob"
+		rows, err = ur.db.Query(query)
+	}
+
 	if err != nil {
 		log.Println("Error searching users:", err)
 		return nil, err
@@ -115,7 +125,6 @@ func (ur *UserRepository) IsUsernameUnique(username string, userID int) (bool, e
 	}
 	return false, nil
 }
-
 func (ur *UserRepository) UpdateUser(user *models.User) error {
 	isUnique, err := ur.IsUsernameUnique(user.Username, user.ID)
 	if err != nil {
