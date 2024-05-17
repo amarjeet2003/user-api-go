@@ -1,11 +1,13 @@
 package models
 
+import "time"
+
 type User struct {
-	ID        int    `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Username  string `json:"username"`
-	DOB       string `json:"dob"`
+	ID        int       `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+	Username  string    `json:"username"`
+	DOB       time.Time `json:"dob"`
 }
 
 // // MarshalJSON custom JSON marshaling for User struct
