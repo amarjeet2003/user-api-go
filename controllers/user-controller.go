@@ -21,24 +21,25 @@ func NewUserController(userRepo *repository.UserRepository) *UserController {
 }
 
 func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var reqBody map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
 		log.Println("Error decoding request body:", err)
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, `{"error": "Bad request"}`, http.StatusBadRequest)
 		return
 	}
 
 	dobStr, ok := reqBody["dob"].(string)
 	if !ok {
 		log.Println("DOB is not a valid string")
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, `{"error": "Bad request"}`, http.StatusBadRequest)
 		return
 	}
 	dob, err := time.Parse("2006-01-02", dobStr)
 	if err != nil {
 		log.Println("Error parsing DOB:", err)
-		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid date format"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -52,10 +53,10 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	err = uc.userRepo.CreateUser(&user)
 	if err != nil {
 		if err.Error() == "username already exists" {
-			http.Error(w, "Username already exists", http.StatusConflict)
+			http.Error(w, `{"error": "Username already exists"}`, http.StatusConflict)
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, `{"error": "Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -64,12 +65,13 @@ func (uc *UserController) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 	idStr := vars["id"]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		log.Println("Error converting ID to integer:", err)
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid user ID"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -77,20 +79,20 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err = json.NewDecoder(r.Body).Decode(&reqBody)
 	if err != nil {
 		log.Println("Error decoding request body:", err)
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, `{"error": "Bad request"}`, http.StatusBadRequest)
 		return
 	}
 
 	dobStr, ok := reqBody["dob"].(string)
 	if !ok {
 		log.Println("DOB is not a valid string")
-		http.Error(w, "Bad request", http.StatusBadRequest)
+		http.Error(w, `{"error": "Bad request"}`, http.StatusBadRequest)
 		return
 	}
 	dob, err := time.Parse("2006-01-02", dobStr)
 	if err != nil {
 		log.Println("Error parsing DOB:", err)
-		http.Error(w, "Invalid date format", http.StatusBadRequest)
+		http.Error(w, `{"error": "Invalid date format"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -105,10 +107,10 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err = uc.userRepo.UpdateUser(&user)
 	if err != nil {
 		if err.Error() == "username already exists" {
-			http.Error(w, "Username already exists", http.StatusConflict)
+			http.Error(w, `{"error": "Username already exists"}`, http.StatusConflict)
 			return
 		}
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, `{"error": "Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
@@ -117,11 +119,13 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uc *UserController) SearchUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	name := r.URL.Query().Get("name")
+
 	users, err := uc.userRepo.SearchUsers(name)
 	if err != nil {
 		log.Println("Error searching users:", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, `{"error": "Internal server error"}`, http.StatusInternalServerError)
 		return
 	}
 
