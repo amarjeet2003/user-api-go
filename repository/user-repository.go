@@ -17,6 +17,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db}
 }
 
+// Function to create user
 func (ur *UserRepository) CreateUser(user *models.User) error {
 	isUnique, err := ur.IsUsernameUnique(user.Username, 0)
 	if err != nil {
@@ -43,6 +44,7 @@ func (ur *UserRepository) CreateUser(user *models.User) error {
 	return nil
 }
 
+// Function to get users
 func (ur *UserRepository) SearchUsers(name string) ([]*models.User, error) {
 	var query string
 	var rows *sql.Rows
@@ -87,32 +89,7 @@ func (ur *UserRepository) SearchUsers(name string) ([]*models.User, error) {
 	return users, nil
 }
 
-func (ur *UserRepository) GetUser(identifier string) (*models.User, error) {
-	query := "SELECT id, first_name, last_name, username, dob FROM users WHERE username = ? OR id = ?"
-	row := ur.db.QueryRow(query, identifier, identifier)
-	return ur.scanUser(row)
-}
-
-func (ur *UserRepository) scanUser(row *sql.Row) (*models.User, error) {
-	var user models.User
-	var dob string
-
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Username, &dob)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	user.DOB, err = time.Parse("2006-01-02", dob)
-	if err != nil {
-		return nil, err
-	}
-
-	return &user, nil
-}
-
+// Function to check if username is unique
 func (ur *UserRepository) IsUsernameUnique(username string, userID int) (bool, error) {
 	var id int
 	query := "SELECT id FROM users WHERE username = ? AND id != ?"
@@ -125,6 +102,8 @@ func (ur *UserRepository) IsUsernameUnique(username string, userID int) (bool, e
 	}
 	return false, nil
 }
+
+// Function to update user details
 func (ur *UserRepository) UpdateUser(user *models.User) error {
 	isUnique, err := ur.IsUsernameUnique(user.Username, user.ID)
 	if err != nil {
